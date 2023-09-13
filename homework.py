@@ -53,7 +53,9 @@ def check_tokens():
             message = (f'Отсутствует обязательная переменная '
                        f'окружения: {token_name}')
             logger.critical(message)
-            raise ValueError(message)
+            return False
+            # raise ValueError(message)
+    return True
 
 
 def send_message(bot, message):
@@ -85,12 +87,12 @@ def get_api_answer(timestamp):
             f'с параметрами {payload} и хедером {HEADERS}'
         )
 
-    if response.status_code == HTTPStatus.OK:
-        try:
-            return response.json()
-        except JSONDecodeError:
-            raise ConvertException('Ошибка приведения JSON к объекту.')
-    raise BadRequestException('Неожиданный код ответа.')
+    if response.status_code != HTTPStatus.OK:
+        raise BadRequestException('Неожиданный код ответа.')
+    try:
+        return response.json()
+    except JSONDecodeError:
+        raise ConvertException('Ошибка приведения JSON к объекту.')
 
 
 def check_response(response):
@@ -103,7 +105,7 @@ def check_response(response):
     ]
     for key in required_keys:
         if key not in response:
-            raise KeyError(f'Ключ {key} отсутствует в ответе.')
+            raise ValueError(f'Значение ключа {key} отсутствует в ответе.')
 
     if not isinstance(response['homeworks'], list):
         raise TypeError('Структура данных не соответствует ожиданиям.')
@@ -127,7 +129,8 @@ def parse_status(homework):
 
 def main():
     """Основная логика работы бота."""
-    check_tokens()
+    if not check_tokens():
+        sys.exit(1)
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     timestamp = int(time.time())
     last_error = ''
