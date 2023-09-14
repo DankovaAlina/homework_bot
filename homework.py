@@ -54,7 +54,6 @@ def check_tokens():
                        f'окружения: {token_name}')
             logger.critical(message)
             return False
-            # raise ValueError(message)
     return True
 
 
@@ -103,10 +102,10 @@ def check_response(response):
         'homeworks',
         'current_date'
     ]
-    for key in required_keys:
-        if key not in response:
-            raise ValueError(f'Значение ключа {key} отсутствует в ответе.')
-
+    if not all(key in response for key in required_keys):
+        raise ValueError('Отсутствуют ключи: {}'.format(
+            ','.join(required_keys - response.keys())
+        ))
     if not isinstance(response['homeworks'], list):
         raise TypeError('Структура данных не соответствует ожиданиям.')
 
